@@ -24,84 +24,66 @@ func main() {
 }
 
 func solution(friends []string, gifts []string) int {
-	var maxCount int
 
-	totalMap := map[string]int{}
+	totalMaps := make(map[string]map[string]int)
+	sumMap := make(map[string]int)
+
 	for _, friend := range friends {
-		totalMap[friend] = 0
+		totalMaps[friend] = make(map[string]int)
+		sumMap[friend] = 0
 	}
 
-	giverMaps := make(map[string]map[string]int)
-	receiverMaps := make(map[string]map[string]int)
+	for friend, totalMap := range totalMaps {
+		for _, friend2 := range friends {
+			if friend != friend2 {
+				totalMap[friend2] = 0
+			}
+		}
+	}
 
 	for _, gift := range gifts {
-		splitGift := strings.Split(gift, " ")
-		giver := splitGift[0]
-		receiver := splitGift[1]
+		giver := strings.Split(gift, " ")[0]
+		receiver := strings.Split(gift, " ")[1]
 
-		if _, ok := giverMaps[giver]; !ok {
-			giverMaps[giver] = make(map[string]int)
-		}
+		sumMap[giver]++
+		sumMap[receiver]--
 
-		if _, ok := giverMaps[giver][receiver]; !ok {
-			giverMaps[giver][receiver] = 1
-		} else {
-			giverMaps[giver][receiver]++
-		}
-
-		if _, ok := receiverMaps[receiver]; !ok {
-			receiverMaps[receiver] = make(map[string]int)
-		}
-
-		if _, ok := receiverMaps[receiver][giver]; !ok {
-			receiverMaps[receiver][giver] = 1
-		} else {
-			receiverMaps[receiver][giver]++
-		}
+		totalMaps[giver][receiver]++
 	}
 
-	for giver, giverMap := range giverMaps {
-		for _, count := range giverMap {
-			totalMap[giver] += count
-		}
-	}
+	resultMap := make(map[string]int)
 
-	for receiver, receiverMap := range receiverMaps {
-		for _, count := range receiverMap {
-			totalMap[receiver] -= count
-		}
-	}
-
-	resultMap := map[string]int{}
-	for _, friend := range friends {
-		resultMap[friend] = 0
-	}
-
-	for giver, giverMap := range giverMaps {
-		for receiver, receiverMap := range receiverMaps {
+	for giver, totalMap := range totalMaps {
+		for receiver, _ := range totalMap {
 			if giver != receiver {
-				for given, giverCount := range giverMap {
-					for received, receiverCount := range receiverMap {
-						if giverCount > receiverCount {
-							resultMap[giver]++
+				_, ok := totalMaps[giver][receiver]
+				_, ok2 := totalMaps[receiver][giver]
+
+				if ok && ok2 {
+					if totalMaps[giver][receiver] == totalMaps[receiver][giver] {
+						if sumMap[giver] > sumMap[receiver] {
+							resultMap[giver] += 1
 						}
 					}
-				}
-				if totalMap[giver] > totalMap[receiver] {
-					resultMap[giver]++
+
+					if totalMaps[giver][receiver] > totalMaps[receiver][giver] {
+						resultMap[giver] += 1
+					}
+				} else {
+					if sumMap[giver] > sumMap[receiver] {
+						resultMap[giver] += 1
+					}
 				}
 			}
 		}
 	}
 
-	fmt.Printf("giverMaps: %v\n", giverMaps)
-	fmt.Printf("receiverMaps: %v\n", receiverMaps)
-
-	for _, count := range resultMap {
-		if count > maxCount {
-			maxCount = count
+	maxGifts := 0
+	for _, gifts := range resultMap {
+		if gifts > maxGifts {
+			maxGifts = gifts
 		}
 	}
 
-	return maxCount
+	return maxGifts
 }

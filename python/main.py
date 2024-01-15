@@ -1,18 +1,27 @@
 def solution(friends, gifts):
-    gift_count = {}
+    total_maps = {friend: {other: 0 for other in friends if other != friend} for friend in friends}
+    sum_map = {friend: 0 for friend in friends}
 
     for gift in gifts:
         giver, receiver = gift.split()
-        gift_count[giver] = gift_count.get(giver, 0) - 1
-        gift_count[receiver] = gift_count.get(receiver, 0) + 1
+        sum_map[giver] += 1
+        sum_map[receiver] -= 1
+        total_maps[giver][receiver] += 1
 
-    max_gift_count = 0
+    result_map = {}
+    for giver in total_maps:
+        for receiver in total_maps[giver]:
+            giver_to_receiver = total_maps[giver][receiver]
+            receiver_to_giver = total_maps[receiver].get(giver, 0)
 
-    for friend in friends:
-        if friend in gift_count and gift_count[friend] > max_gift_count:
-            max_gift_count = gift_count[friend]
+            if giver_to_receiver == receiver_to_giver:
+                if sum_map[giver] > sum_map[receiver]:
+                    result_map[giver] = result_map.get(giver, 0) + 1
+            elif giver_to_receiver > receiver_to_giver:
+                result_map[giver] = result_map.get(giver, 0) + 1
 
-    return max_gift_count
+    return max(result_map.values(), default=0)
+
 
 if __name__ == '__main__':
     friends1 = ["muzi", "ryan", "frodo", "neo"]

@@ -3,6 +3,7 @@ import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
+        
         Solution solution = new Solution();
 
         String[] friends1 = { "muzi", "ryan", "frodo", "neo" };
@@ -23,63 +24,58 @@ public class Main {
 
 class Solution {
     public int solution(String[] friends, String[] gifts) {
-        int maxCount = 0;
+        
+        Map<String, Map<String, Integer>> totalMaps = new HashMap<>();
+        Map<String, Integer> sumMap = new HashMap<>();
 
-        Map<String, Integer> totalMap = new HashMap<>();
         for (String friend : friends) {
-            totalMap.put(friend, 0);
+            Map<String, Integer> friendMap = new HashMap<>();
+            for (String otherFriend : friends) {
+                if (!friend.equals(otherFriend)) {
+                    friendMap.put(otherFriend, 0);
+                }
+            }
+            totalMaps.put(friend, friendMap);
+            sumMap.put(friend, 0);
         }
-
-        Map<String, Map<String, Integer>> giverMaps = new HashMap<>();
-        Map<String, Map<String, Integer>> receiverMaps = new HashMap<>();
 
         for (String gift : gifts) {
-            String[] splitGift = gift.split(" ");
-            String giver = splitGift[0];
-            String receiver = splitGift[1];
+            String[] parts = gift.split(" ");
+            String giver = parts[0];
+            String receiver = parts[1];
 
-            giverMaps.putIfAbsent(giver, new HashMap<>());
-            giverMaps.get(giver).put(receiver, giverMaps.get(giver).getOrDefault(receiver, 0) + 1);
+            sumMap.put(giver, sumMap.getOrDefault(giver, 0) + 1);
+            sumMap.put(receiver, sumMap.getOrDefault(receiver, 0) - 1);
 
-            receiverMaps.putIfAbsent(receiver, new HashMap<>());
-            receiverMaps.get(receiver).put(giver, receiverMaps.get(receiver).getOrDefault(giver, 0) + 1);
-        }
-
-        for (Map.Entry<String, Map<String, Integer>> entry : giverMaps.entrySet()) {
-            String giver = entry.getKey();
-            Map<String, Integer> giverMap = entry.getValue();
-            for (int count : giverMap.values()) {
-                totalMap.put(giver, totalMap.get(giver) + count);
-            }
-        }
-
-        for (Map.Entry<String, Map<String, Integer>> entry : receiverMaps.entrySet()) {
-            String receiver = entry.getKey();
-            Map<String, Integer> receiverMap = entry.getValue();
-            for (int count : receiverMap.values()) {
-                totalMap.put(receiver, totalMap.get(receiver) - count);
-            }
+            Map<String, Integer> giverMap = totalMaps.get(giver);
+            giverMap.put(receiver, giverMap.getOrDefault(receiver, 0) + 1);
         }
 
         Map<String, Integer> resultMap = new HashMap<>();
-        for (String friend : friends) {
-            resultMap.put(friend, 0);
-        }
+        for (String giver : totalMaps.keySet()) {
+            for (String receiver : totalMaps.get(giver).keySet()) {
+                if (!giver.equals(receiver)) {
+                    int giverToReceiver = totalMaps.get(giver).getOrDefault(receiver, 0);
+                    int receiverToGiver = totalMaps.get(receiver).getOrDefault(giver, 0);
 
-        for (Map.Entry<String, Map<String, Integer>> giverEntry : giverMaps.entrySet()) {
-            String giver = giverEntry.getKey();
-            for (Map.Entry<String, Map<String, Integer>> receiverEntry : receiverMaps.entrySet()) {
-                String receiver = receiverEntry.getKey();
-                if (!giver.equals(receiver) && totalMap.get(giver) > totalMap.get(receiver)) {
-                    resultMap.put(giver, resultMap.get(giver) + 1);
+                    if (giverToReceiver == receiverToGiver) {
+                        if (sumMap.get(giver) > sumMap.get(receiver)) {
+                            resultMap.put(giver, resultMap.getOrDefault(giver, 0) + 1);
+                        }
+                    } else if (giverToReceiver > receiverToGiver) {
+                        resultMap.put(giver, resultMap.getOrDefault(giver, 0) + 1);
+                    }
                 }
             }
         }
 
-        for (int count : resultMap.values()) {
-            maxCount = Math.max(maxCount, count);
+        int maxGifts = 0;
+        for (int giftsReceived : resultMap.values()) {
+            if (giftsReceived > maxGifts) {
+                maxGifts = giftsReceived;
+            }
         }
 
-        return maxCount;
+        return maxGifts;
     }
 }
